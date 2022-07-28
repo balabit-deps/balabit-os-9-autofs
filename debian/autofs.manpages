@@ -1,0 +1,4 @@
+debian/tmp/usr/share/man/man8/*
+debian/tmp/usr/share/man/man5/autofs.5
+debian/tmp/usr/share/man/man5/autofs.conf.5
+debian/tmp/usr/share/man/man5/auto.master.5

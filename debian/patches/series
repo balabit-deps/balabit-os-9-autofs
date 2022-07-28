@@ -1,0 +1,14 @@
+11default_automaster_location.patch
+12disable_default_auto_master.patch
+15auto_net_nfs4.patch
+fix-ldflags.patch
+fix-ssslib-search.patch
+remove-kernel-mount.nfs-version-check.patch
+mount-hidden-samba-shares.patch
+hardening-flags.patch
+spelling-error-fixes.patch
+fix-lookup-ldap-crash.patch
+fix-nfs4-mounts-in-auto-net.patch
+fix-loop-under-run-in-cache_get_offset_parent.patch
+fix-nfsv4-only-mounts-should-not-use-rpcbind.patch
+autofs-5.1.8-ldap-kerberos-leads-to-automount-hang-p.patch

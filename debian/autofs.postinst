@@ -1,0 +1,35 @@
+#!/bin/sh
+set -e
+
+if [ "$1" = "configure" ]; then
+  for file in auto.master auto.net auto.misc auto.smb autofs.conf default/autofs; do
+    # transfer ownership from old autofs5 package
+    case "`ucfq -w /etc/$file`" in
+      *:autofs5:*) force=--force ;;
+      *) force= ;;
+    esac
+    ucfr $force autofs /etc/$file
+    ucf /usr/share/autofs/conffiles/$file /etc/$file
+  done
+fi
+
+# In version 5.0.6 (wheezy), the package has been renamed
+# from autofs5 to autofs.  We properly Breaks/Replaces the old package,
+# and dummy/transitional `autofs5' is also provided, so regular upgrades
+# and new installs works.  But when a system had old autofs5 installed
+# and the user installs new autofs manually, the system ends up having
+# config files of old autofs5, together with maintainer scripts, and
+# this new autofs package.  We need to ensure that old autofs5 package
+# can be purged, but its maintscripts tries to deregister/remove
+# ucf-controlled files, -- the same as we maintain above.  We must stop
+# it from doing so, and the only way we currently know to do that is to
+# REMOVE old package's maintscripts to stop it from being executed.
+# Suggested by Ben Hutchings and Steve Langasek.  #686146
+if [ "$1" = configure ]; then
+  if postrm="$(dpkg-query -c autofs5 postrm 2>/dev/null)" && [ -n "$postrm" ]
+  then
+    rm -f "$postrm"
+  fi
+fi
+
+#DEBHELPER#

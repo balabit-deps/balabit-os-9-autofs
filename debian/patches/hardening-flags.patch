@@ -1,0 +1,20 @@
+Last Updated: 2017-06-16
+Author: Vincent McIntyre <vincent.mcintyre@csiro.au>
+Forwarded: no
+Description: Avoid warning about -fPIE from blhc
+Abstract:
+ This is probably not entirely necessary since all modules are
+ compiled with -fPIE, but it avoids a warning.
+ Index: autofs-5.1.2/daemon/Makefile
+
+--- a/daemon/Makefile
++++ b/daemon/Makefile
+@@ -38,7 +38,7 @@
+ all: automount
+ 
+ automount: $(OBJS) $(AUTOFS_LIB)
+-	$(CC) $(DAEMON_LDFLAGS) -o automount $(OBJS) $(LDFLAGS) $(LIBS) $(AUTOFS_LIB_LINK)
++	$(CC) $(DAEMON_CFLAGS) $(DAEMON_LDFLAGS) -o automount $(OBJS) $(LDFLAGS) $(LIBS) $(AUTOFS_LIB_LINK)
+ 	$(STRIP) automount
+ 
+ master_tok.c: master_tok.l

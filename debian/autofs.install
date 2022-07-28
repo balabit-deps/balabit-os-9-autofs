@@ -1,0 +1,7 @@
+etc/autofs.conf		/usr/share/autofs/conffiles
+etc/auto.*		/usr/share/autofs/conffiles
+etc/default/autofs	/usr/share/autofs/conffiles/default
+usr/sbin/automount
+usr/lib/*/libautofs.so
+usr/lib/*/autofs/*
+etc/init.d/autofs

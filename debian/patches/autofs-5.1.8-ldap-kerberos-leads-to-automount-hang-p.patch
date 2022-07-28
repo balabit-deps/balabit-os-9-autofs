@@ -1,0 +1,45 @@
+From bd89efdee6c806190a0e78006cdc32d521dfd746 Mon Sep 17 00:00:00 2001
+From: James Dingwall <james-autofs () dingwall ! me ! uk>
+Date: Tue, 19 Jul 2022 19:55:40 +0000
+Subject: [PATCH] autofs 5.1.8: ldap+kerberos leads to automount hang [patch]
+
+Hi,
+
+Cross reference: https://bugs.launchpad.net/ubuntu/+source/autofs/+bug/1982219
+
+I recently upgraded an Ubuntu system from 20.04 to 22.04 at which point
+autofs stopped working.  `automount -d -m -v -f` would hang without
+printing the maps.  After adding some debug statements I traced this to
+an unbalanced pthread_mutex_lock()/unlock() in sasl_do_kinit_ext_cc() of
+modules/cyrus-sasl.c.  The patch attached this email resolved the problem
+for me.
+
+Thanks,
+James
+
+Origin: upstream, https://marc.info/?l=autofs&m=165826158526742&w=2
+Bug-Ubuntu: https://bugs.launchpad.net/bugs/1982219
+Applied-Upstream: scheduled for anytihng >5.1.8
+Last-Update: 2022-07-28
+
+---
+ modules/cyrus-sasl.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/modules/cyrus-sasl.c b/modules/cyrus-sasl.c
+index ae046e01..c0b47439 100644
+--- a/modules/cyrus-sasl.c
++++ b/modules/cyrus-sasl.c
+@@ -721,6 +721,9 @@ sasl_do_kinit_ext_cc(unsigned logopt, struct lookup_context *ctxt)
+ 
+ 	debug(logopt, "Kerberos authentication was successful!");
+ 
++	status = pthread_mutex_unlock(&krb5cc_mutex);
++	if (status)
++		fatal(status);
+ 	return 0;
+ 
+ out_cleanup_def_princ:
+-- 
+2.37.1
+

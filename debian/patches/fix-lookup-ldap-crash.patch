@@ -1,0 +1,27 @@
+Description: Fix segfault in lookup_ldap initialisation
+ lib/defaults.c doesn't initialise the config cache before lookup_ldap
+ attempts to read from it.
+ .
+ <andreas> lookup_ldap is the only module that is still built and linked
+ using -Bsymbolic-functions. d/rules tries to strip that option out of
+ LDFLAGS, but it leaks back in via $(krb5-config --libs) when lookup_ldap
+ is built.
+Author: Malcolm Scott <debianpkg@malc.org.uk>
+Bug-Debian: https://bugs.debian.org/901344
+Bug-Ubuntu: https://bugs.launchpad.net/bugs/1503034
+Forwarded: https://www.spinics.net/lists/autofs/msg01903.html
+
+--- a/modules/lookup_ldap.c
++++ b/modules/lookup_ldap.c
+@@ -1711,6 +1711,11 @@
+ 		ctxt->check_defaults = 1;
+ 	}
+ 
++	if (!defaults_read_config(0)) {
++		free_context(ctxt);
++		return 1;
++	}
++
+ 	ctxt->timeout = defaults_get_ldap_timeout();
+ 	ctxt->network_timeout = defaults_get_ldap_network_timeout();
+ 

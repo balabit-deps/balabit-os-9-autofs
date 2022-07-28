@@ -1,0 +1,279 @@
+Description: Fix tons of spelling flaws. Thanks lintian.
+Author: Mike Gabriel <mike.gabriel@das-netzwerkteam.de>
+
+--- a/daemon/state.c
++++ b/daemon/state.c
+@@ -358,7 +358,7 @@
+ 		 * TODO: how do we recognise these orphaned map instances. We
+ 		 * can't just delete these instances when the cache becomes
+ 		 * empty because that is a valid state for a master map entry.
+-		 * This is becuase of the requirement to continue running with
++		 * This is because of the requirement to continue running with
+ 		 * an empty cache awaiting a map re-load.
+ 		 */
+ 		valid = lookup_source_valid_mapent(ap, me->key, LKP_DISTINCT);
+--- a/man/auto.master.5.in
++++ b/man/auto.master.5.in
+@@ -102,8 +102,8 @@
+ .B program
+ The map is an executable program, which is passed a key on the command
+ line and returns an entry (everything besides the key) on stdout if successful.
+-Optinally, the keyword exec may be used as a synonym for program to avoid
+-confusion with amd formated maps mount type program.
++Optionally, the keyword exec may be used as a synonym for program to avoid
++confusion with amd formatted maps mount type program.
+ .TP
+ .B yp
+ The map is a NIS (YP) database.
+@@ -137,7 +137,7 @@
+ .br
+ Format of the map data; currently the formats recognized are \fBsun\fP,
+ which is a subset of the Sun automounter map format, \fBhesiod\fP, for
+-hesiod filesys entries and \fBamd\fP for amd formated map entries.
++hesiod filesys entries and \fBamd\fP for amd formatted map entries.
+ If the format is left unspecified, it defaults to \fBsun\fP for all map
+ types except \fBhesiod\fP unless it is a top level \fBamd\fP mount that
+ has a configuration entry for the mount point path, in which case the
+--- a/man/autofs.5
++++ b/man/autofs.5
+@@ -241,7 +241,7 @@
+ Multiple replicated hosts, different (potentially) paths:
+ <path> host1:/path/pathA host2:/path/pathB
+ 
+-Mutliple weighted, replicated hosts same path:
++Multiple weighted, replicated hosts same path:
+ <path> host1(5),host2(6),host3(1):/path/path
+ 
+ Multiple weighted, replicated hosts different (potentially) paths:
+@@ -490,7 +490,7 @@
+ .br
+ The \fBopts\fP option is used to specify mount options to be
+ used for the mount. If a "\fB-\fP" is given it is ignored.
+-Options that may be used are dependend on the mount filesystem.
++Options that may be used are dependent on the mount filesystem.
+ .TP
+ .B addopts
+ .br
+@@ -542,9 +542,9 @@
+ 
+ The resulting relative path string is matched by first trying the sting
+ itself. If no match is found the last component of the key string is
+-replaced with the wilcard match cahracter ("*") and a wildcard match is
+-attemted. This process continues until a match is found or until the
+-last match, against the wilcard match key alone, fails to match a map
++replaced with the wildcard match character ("*") and a wildcard match is
++attempted. This process continues until a match is found or until the
++last match, against the wildcard match key alone, fails to match a map
+ entry and the key lookup fails.
+ .SS Macro Usage
+ Macros are used a lot in the autofs amd implementation.
+@@ -585,7 +585,7 @@
+ 
+ Finally, we have an example of the use of the \fBsublink\fP option. In
+ this case the filesystem bilbo:/shared would be mounted on a path
+-external the automount directory (under the direcory given by
++external the automount directory (under the directory given by
+ configuration option auto_dir) and the path /test/local either
+ symlinked or bind mounted (depending on the setting autofs_use_lofs)
+ to the "local" subdirectory of the external mount.
+@@ -593,8 +593,8 @@
+ .SH "NOTES"
+ To be able to use IPv6 within autofs maps the package must be build
+ to use the libtirpc library for its RPC communications. This is
+-becuase the glibc RPC implementation doesn't support IPv6 and is
+-depricated so this is not likely to change.
++because the glibc RPC implementation doesn't support IPv6 and is
++deprecated so this is not likely to change.
+ .BR
+ .SH "SEE ALSO"
+ .BR automount (8),
+--- a/man/autofs.conf.5.in
++++ b/man/autofs.conf.5.in
+@@ -31,7 +31,7 @@
+ with earlier autofs releases.
+ .TP
+ .B master_wait
+-Sets the default maximum number of retries (actaul iterations is half
++Sets the default maximum number of retries (actual iterations is half
+ this, each is delayed by 2 seconds before retrying) waiting for the
+ master map to become available if it cannot be read at program start
+ (program default 10, then continue). This can be longer if the map
+@@ -155,7 +155,7 @@
+ .B use_ignore_mount_option
+ .br
+ An option to enable the use of autofs pseudo option "disable". This option
+-is used as a hint to user space that the mount entry should be ommitted from
++is used as a hint to user space that the mount entry should be omitted from
+ mount table listings. The default is "no" to avoid unexpected changes in
+ behaviour and so is an opt-in setting.
+ .TP
+@@ -211,7 +211,7 @@
+ The base dn to use when searching for amap base dn. This entry may be
+ given multiple times and each will be checked for a map base dn in
+ the order they occur in the configuration. The search base list is read
+-at startup and whenever the daemon recieves a HUP signal.
++at startup and whenever the daemon receives a HUP signal.
+ .TP
+ .B map_object_class
+ .br
+--- a/modules/lookup_hesiod.c
++++ b/modules/lookup_hesiod.c
+@@ -59,7 +59,7 @@
+ 		mapfmt = MAPFMT_DEFAULT;
+ 
+ 	if (!strcmp(mapfmt, "amd")) {
+-		/* amd formated hesiod maps have a map name */
++		/* amd formatted hesiod maps have a map name */
+ 		const char *mapname = argv[0];
+ 		if (strncmp(mapname, AMD_MAP_PREFIX, AMD_MAP_PREFIX_LEN)) {
+ 			hesiod_end(ctxt->hesiod_context);
+@@ -330,7 +330,7 @@
+ 	/*
+ 	 * Now strip successive directory components and try a
+ 	 * match against map entries ending with a wildcard and
+-	 * finally try the wilcard entry itself.
++	 * finally try the wildcard entry itself.
+ 	 */
+ 	while ((prefix = strrchr(lkp_key, '/'))) {
+ 		char *match;
+--- a/README.replicated-server
++++ b/README.replicated-server
+@@ -14,7 +14,7 @@
+ Multiple replicated hosts, different (potentially) paths:
+ <path> host1:/path/pathA host2:/path/pathB
+ 
+-Mutliple weighted, replicated hosts same path:
++Multiple weighted, replicated hosts same path:
+ <path> host1(5),host2(6),host3(1):/path/path
+ 
+ Multiple weighted, replicated hosts different (potentially) 
+--- a/daemon/automount.c
++++ b/daemon/automount.c
+@@ -2006,7 +2006,7 @@
+ 	        "			maximum wait time (seconds) for master\n"
+ 	        "			map to become available\n"
+ 		"	-v --verbose	be verbose\n"
+-		"	-d --debug	log debuging info\n"
++		"	-d --debug	log debugging info\n"
+ 		"	-Dvariable=value, --define variable=value\n"
+ 		"			define global macro variable\n"
+ 		"	-S --systemd-service\n"
+--- a/lib/defaults.c
++++ b/lib/defaults.c
+@@ -558,7 +558,7 @@
+ 	if (ret == CFG_FAIL)
+ 		goto error;
+ 
+-	/* selectors_on_default is depricated, use selectors_in_defaults */
++	/* selectors_on_default is deprecated, use selectors_in_defaults */
+ 	ret = conf_update(sec, NAME_AMD_SELECTORS_ON_DEFAULT,
+ 			  DEFAULT_AMD_SELECTORS_IN_DEFAULTS, CONF_NONE);
+ 	if (ret == CFG_FAIL)
+--- a/modules/lookup_file.c
++++ b/modules/lookup_file.c
+@@ -846,7 +846,7 @@
+ 	/*
+ 	 * Now strip successive directory components and try a
+ 	 * match against map entries ending with a wildcard and
+-	 * finally try the wilcard entry itself. If we get a match
++	 * finally try the wildcard entry itself. If we get a match
+ 	 * then update the cache with the read key and its mapent.
+ 	*/
+ 	while ((prefix = strrchr(lkp_key, '/'))) {
+--- a/modules/lookup_ldap.c
++++ b/modules/lookup_ldap.c
+@@ -2371,7 +2371,7 @@
+ 
+ do_paged:
+ 	/* we need to use page controls so requery LDAP */
+-	debug(ap->logopt, MODPREFIX "geting page of results");
++	debug(ap->logopt, MODPREFIX "getting page of results");
+ 
+ 	rv = ldap_create_page_control(sp->ldap, sp->pageSize, sp->cookie,
+ 				      pagingCriticality, &pageControl);
+@@ -3514,7 +3514,7 @@
+ 	/*
+ 	 * Now strip successive directory components and try a
+ 	 * match against map entries ending with a wildcard and
+-	 * finally try the wilcard entry itself.
++	 * finally try the wildcard entry itself.
+ 	 */
+ 	while ((prefix = strrchr(lkp_key, '/'))) {
+ 		char *match;
+--- a/modules/lookup_nisplus.c
++++ b/modules/lookup_nisplus.c
+@@ -422,7 +422,7 @@
+ 	/*
+ 	 * Now strip successive directory components and try a
+ 	 * match against map entries ending with a wildcard and
+-	 * finally try the wilcard entry itself.
++	 * finally try the wildcard entry itself.
+ 	 */
+ 	while ((prefix = strrchr(lkp_key, '/'))) {
+ 		char *match;
+--- a/modules/lookup_program.c
++++ b/modules/lookup_program.c
+@@ -537,7 +537,7 @@
+ 	/*
+ 	 * Now strip successive directory components and try a
+ 	 * match against map entries ending with a wildcard and
+-	 * finally try the wilcard entry itself.
++	 * finally try the wildcard entry itself.
+ 	 */
+ 	while ((prefix = strrchr(lkp_key, '/'))) {
+ 		char *match;
+--- a/modules/lookup_yp.c
++++ b/modules/lookup_yp.c
+@@ -549,7 +549,7 @@
+ 	/*
+ 	 * Now strip successive directory components and try a
+ 	 * match against map entries ending with a wildcard and
+-	 * finally try the wilcard entry itself.
++	 * finally try the wildcard entry itself.
+ 	 */
+ 	while ((prefix = strrchr(lkp_key, '/'))) {
+ 		char *match;
+--- a/modules/mount_nfs.c
++++ b/modules/mount_nfs.c
+@@ -141,7 +141,7 @@
+ 
+ 			if (_strncmp("nosymlink", cp, o_len) == 0) {
+ 				warn(ap->logopt, MODPREFIX
+-				     "the \"nosymlink\" option is depricated "
++				     "the \"nosymlink\" option is deprecated "
+ 				     "and will soon be removed, "
+ 				     "use the \"nobind\" option instead");
+ 				nosymlink = 1;
+--- a/modules/parse_sun.c
++++ b/modules/parse_sun.c
+@@ -948,7 +948,7 @@
+ 		    !strncmp(ptr, "sss:", 4) || !strncmp(ptr, "dir:", 4))
+ 			return 1;
+ 		error(logopt,
+-		      "expected colon delimeter not found in location %s",
++		      "expected colon delimiter not found in location %s",
+ 		      loc);
+ 		return 0;
+ 	} else {
+--- a/CHANGELOG
++++ b/CHANGELOG
+@@ -1310,7 +1310,7 @@
+   - direct mounts.
+   - lazy multi-mounts.
+   - added kernel module to source tree.
+-- merged depricated LDAP patch.
++- merged deprecated LDAP patch.
+ - merged configurable locking patch.
+ - implemented nsswitch lookup for client maps.
+ - sync kernel module source.
+--- a/lib/parse_subs.c
++++ b/lib/parse_subs.c
+@@ -565,7 +565,7 @@
+ 		/*
+ 		 * Otherwise strip successive directory components and try
+ 		 * a match against map entries ending with a wildcard and
+-		 * finally try the wilcard entry itself.
++		 * finally try the wildcard entry itself.
+ 		*/
+ 		while (!me) {
+ 			char *prefix;

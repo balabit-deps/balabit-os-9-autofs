@@ -1,0 +1,25 @@
+Some thoughts about stuff which should be done.
+
+o Forward patches upstream (lots of changes is needed,
+  and the code needs quite a bit of love)
+
+o The above also includes stuff like using fixed paths for
+  mount/umount/fsck/etc, see comments in debian/rules
+  around configure call -- these should be fixed upstream
+  properly.
+
+o Deal with de-applying patches to configure (see #674391).
+  Upstream keeps configure and include/config.h.in files in
+  git and stores any changes in these in git too, so upstrem
+  patches contains hunks destined for these files.  So initially
+  we have original configure from orig.tar, next we patch it
+  using upstream patches, next we regenerate it from configure.in.
+  At this point (and note that distclean target explicitly
+  regenerates configure), patches applied to original configure
+  can't be deapplied anymore.
+
+o Verify if we should have sss autofs package.  The configure
+  test for this -- AF_CHECK_SSS_LIB in aclocal.m4 -- is wrong,
+  since it only looks in /usr/lib and /usr/lib64.
+
+o Verify if we should include libtirpc support.

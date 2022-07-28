@@ -1,0 +1,25 @@
+#!/bin/sh
+
+set -x
+set -e
+
+now=$(date --utc)
+result=0
+
+echo "creating /nfspub nfs export"
+mkdir -p /nfspub
+echo "${now} - This is an nfs public export" > /nfspub/nfs-public.txt
+echo "/nfspub *(ro,no_subtree_check)" > /etc/exports
+exportfs -avr
+
+echo "Configuring automount for nfs on /net"
+mkdir -p /etc/auto.master.d
+echo '/net -hosts -intr,soft --timeout=180' > /etc/auto.master.d/net.autofs
+systemctl restart autofs
+
+echo "Accessing the autofs mountpoint"
+timeout 30s grep -qE "${now}.*nfs public" /net/localhost/nfspub/nfs-public.txt || result=$?
+if [ "$result" -ne "0" ]; then
+    echo "test failed, couldn't access /net/localhost/nfspub/nfs-public.txt"
+    exit ${result}
+fi

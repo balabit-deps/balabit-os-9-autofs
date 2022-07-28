@@ -1,0 +1,78 @@
+#!/usr/bin/make -f
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+DPKG_EXPORT_BUILDFLAGS = 1
+include /usr/share/dpkg/buildflags.mk
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
+# Taken from #1636781 as it's the same problem here. Also see
+# https://lists.ubuntu.com/archives/ubuntu-devel/2018-June/040369.html
+ifeq ($(shell dpkg-vendor --derives-from Ubuntu && echo yes),yes)
+  export DEB_LDFLAGS_MAINT_STRIP = -Wl,-Bsymbolic-functions
+endif
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	autoreconf --force
+# Set some standard util paths explicitly,
+# or else we'll have to build-depend on all of them.
+# It is hackish, real solution should be to patch upstream
+# to never check for standard utilities.
+# Upstream also should not distinguish between ext*fs,
+# for all of which /sbin/e2fsck is the real filesystem checker
+# which will figure out type of the filesystem automatically.
+# Also explicitly define some dirs/locations which will be searched
+# if not defined.
+# Always define --enable-sloppy-mount (mount -s).  Also a hack and
+# the same comment as above applies: upstream should use it unconditionally.
+# Even busybox mount understands -s.
+	MOUNT=/bin/mount UMOUNT=/bin/umount \
+	MOUNT_NFS=/sbin/mount.nfs \
+	E2FSCK=/sbin/fsck.ext2 E3FSCK=/sbin/fsck.ext3 E4FSCK=/sbin/fsck.ext4 \
+	initdir=/etc/init.d piddir=/var/run \
+	sssldir=/usr/lib/$(DEB_HOST_MULTIARCH)/sssd/modules \
+	dh_auto_configure -- \
+		--disable-mount-locking \
+		--enable-force-shutdown \
+		--enable-ignore-busy \
+		--enable-sloppy-mount \
+		--mandir=/usr/share/man \
+		--with-confdir=/etc/default \
+		--with-mapdir=/etc \
+		--with-fifodir=/var/run --with-flagdir=/var/run \
+		--with-hesiod \
+		--with-openldap \
+		--with-sasl \
+		--with-libtirpc \
+		$(NULL)
+
+override_dh_auto_build:
+	CFLAGS="$(CFLAGS) $(CPPFLAGS)" \
+	DONTSTRIP=1 dh_auto_build
+
+override_dh_auto_install:
+	dh_auto_install
+	make install_samples INSTALLROOT="$(CURDIR)/debian/tmp"
+
+override_dh_install:
+	dh_install
+	# remove hesiod and ldap modules, they're in separate packages
+	$(RM) debian/autofs/usr/lib/*/autofs/*hesiod*.so \
+              debian/autofs/usr/lib/*/autofs/*ldap*.so
+
+override_dh_installinit:
+# /etc/default/autofs is shipped using ucf
+	dh_installinit -pautofs -- start 19 2 3 4 5 . stop 81 0 1 6 .
+
+override_dh_installchangelogs:
+	dh_installchangelogs CHANGELOG
+
+override_dh_fixperms:
+	dh_fixperms -Xdebian/autofs-ldap/etc/autofs_ldap_auth.conf
+
+get-orig-source:
+	uscan --noconf --force-download --rename --download-current-version --destdir=..

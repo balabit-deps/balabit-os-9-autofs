@@ -1,0 +1,135 @@
+#!/bin/sh
+
+set -x
+
+add_smb_share() {
+    local share="$1"
+    local sharepath="$2"
+    local public="$3"
+
+    if ! testparm -s 2>&1 | grep -qE "^\[${share}\]"; then
+        echo "Adding [${share}] share"
+        cat >> /etc/samba/smb.conf <<EOFEOF
+[${share}]
+  path = ${sharepath}
+  read only = no
+EOFEOF
+    if [ "${public}" = "yes" ]; then
+        cat >> /etc/samba/smb.conf <<EOFEOF
+  guest ok = yes
+EOFEOF
+    else
+        cat >> /etc/samba/smb.conf <<EOFEOF
+  guest ok = no
+EOFEOF
+    fi
+        systemctl reload smbd.service
+    else
+        echo "No need to add private [${share}] share, continuing."
+    fi
+}
+
+create_user() {
+    local username="$1"
+    local password="$2"
+
+    useradd -m "$username"
+    echo "Setting samba password for the ${username} user"
+    (echo "${password}"; echo "${password}") | smbpasswd -s -a ${username}
+}
+
+
+now=$(date --utc)
+result=0
+# Remount everything in case someone is running this interactively
+# and mounts from previous runs and previous usernames are still lingering
+systemctl restart autofs
+
+echo "Setting up a public samba share in /pub"
+mkdir -p /pub
+echo "${now} - This is the public samba share." > /pub/hello-public.txt
+add_smb_share pub /pub yes
+
+echo "Setting up a private samba share in /private"
+mkdir -p /private
+echo "${now} - This is the private samba share." > /private/hello-private.txt
+add_smb_share private /private no
+
+username="smbtest$$"
+password="$$"
+echo "Creating a local test user called ${username}"
+create_user "${username}" "${password}"
+
+echo "Setting up autofs credentials for the private share"
+mkdir -m 0700 -p /etc/creds
+cat > /etc/creds/localhost <<EOFEOF
+username=${username}
+password=${password}
+domain=WORKGROUP
+EOFEOF
+chmod 0600 /etc/creds/localhost
+
+if ! grep -qE "^/cifs" /etc/auto.master; then
+    echo "Configuring autofs for the /cifs mountpoint"
+    echo "/cifs /etc/auto.smb --timeout=180" >> /etc/auto.master
+    systemctl restart autofs
+fi
+
+# We use a trick here. By storing the credentials in /etc/creds/localhost,
+# that means the autofs key is "localhost", and the credentials will be used
+# when accessing /cifs/localhost.
+# If instead we access /cifs/127.0.0.1, since there is no corresponding entry in
+# /etc/creds, that access will be as a guest, i.e., with no credentials
+echo "Testing authenticated share automount"
+timeout 30s grep -qE "${now}.*private" /cifs/localhost/private/hello-private.txt || result=$?
+if [ "$result" -ne "0" ]; then
+    echo "test failed"
+    exit ${result}
+fi
+
+echo "Confirming with smbstatus that an authenticated connection was used"
+output=$(smbstatus 2>&1)
+echo "${output}" | grep -q "${username}" || result=$?
+if [ "${result}" -ne "0" ]; then
+    echo "test failed"
+    echo "smbstatus output:"
+    echo "${smbstatus}"
+    exit "${result}"
+fi
+
+echo "Confirming with mount -t cifs that the filesystem is mounted with authentication"
+output=$(mount -t cifs 2>&1)
+echo "${output}" | grep -qE "on /cifs/localhost/private.*username=${username}" || result=$?
+if [ "${result}" -ne "0" ]; then
+    echo "test failed"
+    echo "mount -t cifs output:"
+    echo "${output}"
+    exit ${result}
+fi
+
+echo "Testing unauthenticated share automount"
+timeout 30s grep -q "${now}.*public" /cifs/127.0.0.1/pub/hello-public.txt || result=$?
+if [ "$result" -ne "0" ]; then
+    echo "test failed"
+    exit ${result}
+fi
+
+echo "Confirming with smbstatus that a guest connection was used"
+output=$(smbstatus 2>&1)
+echo "${output}" | grep -q nobody || result=$?
+if [ "${result}" -ne "0" ]; then
+    echo "test failed"
+    echo "smbstatus output:"
+    echo "${smbstatus}"
+    exit ${result}
+fi
+
+echo "Confirming with mount -t cifs that the filesystem is mounted without authentication"
+output=$(mount -t cifs 2>&1)
+echo "${output}" | grep -qE "on /cifs/127.0.0.1/pub.*sec=none" || result=$?
+if [ "${result}" -ne "0" ]; then
+    echo "test failed"
+    echo "mount -t cifs output:"
+    echo "${output}"
+    exit ${result}
+fi

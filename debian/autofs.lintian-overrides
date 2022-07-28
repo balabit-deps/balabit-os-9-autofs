@@ -1,0 +1,5 @@
+# autofs 5.1.7 introduces autofs.a as a shared library, but we will ignore this for now
+sharedobject-in-library-directory-missing-soname usr/lib/x86_64-linux-gnu/libautofs.so
+
+# autofs.8 man page explains the overall concept of autofs
+spare-manual-page usr/share/man/man8/autofs.8.gz

@@ -1,0 +1,32 @@
+Author: yktor
+Description: Drop backslash after arguments parsing.
+Origin: https://bbs.archlinux.org/viewtopic.php?id=213396
+Abstract:
+ I finally found the time to investigate this problem. It happened because
+ two facts:
+ .
+   1. Autofs reads '$' as a special symbol (variable name) and expands it
+      to variable value
+
+   2. mount.cifs reads '\\' as a delimiter, so you can actually pass
+      "\\\\hostname\\sharename" as mount src argument
+ .
+ So in my case if I returns "//hostname/C$" from auto.smb, then automount
+ daemon replace '$' to '' and if I returns "//hostname/C\\$" then
+ mount.cifs crops "\\$" and uses '$' as a prefixpath mount option.
+ .
+ I made simple fix in automount, that drops back slash after arguments
+ parsing.
+
+--- a/modules/parse_sun.c
++++ b/modules/parse_sun.c
+@@ -191,9 +191,6 @@
+ 
+ 		case '\\':
+ 			len++;
+-			if (dst)
+-				*dst++ = ch;
+-
+ 			if (*src) {
+ 				len++;
+ 				if (dst)

@@ -1,0 +1,7 @@
+Tests: smb-mount
+Depends: @, cifs-utils, samba, smbclient
+Restrictions: isolation-machine, needs-root, allow-stderr
+
+Tests: nfs-mount
+Depends: @, nfs-common, nfs-server
+Restrictions: isolation-machine, needs-root, allow-stderr

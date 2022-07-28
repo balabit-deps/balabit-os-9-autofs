@@ -1,0 +1,7 @@
+Transitional 'autofs5' package would be safe to remove as long
+as 'autofs' package is not marked as automatically installed.
+To make sure 'autofs' will not be removed by 'apt-get autoremove'
+use the following commands:
+
+    sudo aptitude unmarkauto autofs
+    sudo apt-mark manual autofs

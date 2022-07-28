@@ -1,0 +1,16 @@
+[Unit]
+Description=Automounts filesystems on demand
+After=network.target ypbind.service sssd.service network-online.target remote-fs.target
+Wants=network-online.target nfs-client.target
+Documentation=man:autofs(8)
+
+[Service]
+Type=forking
+PIDFile=/run/autofs.pid
+EnvironmentFile=-/etc/default/autofs
+ExecStart=/usr/sbin/automount $OPTIONS --pid-file /var/run/autofs.pid
+ExecReload=/bin/kill -HUP $MAINPID
+TimeoutSec=180
+
+[Install]
+WantedBy=multi-user.target

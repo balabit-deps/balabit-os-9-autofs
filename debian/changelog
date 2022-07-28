@@ -1,0 +1,604 @@
+autofs (5.1.8-1ubuntu1.2) jammy; urgency=medium
+
+  * d/p/autofs-5.1.8-ldap-kerberos-leads-to-automount-hang-p.patch: fix
+    lock imbalance (LP: #1982219)
+
+ -- Christian Ehrhardt <christian.ehrhardt@canonical.com>  Thu, 28 Jul 2022 07:29:32 +0200
+
+autofs (5.1.8-1ubuntu1.1) jammy; urgency=medium
+
+  * d/p/fix-nfsv4-only-mounts-should-not-use-rpcbind.patch:
+    Make NFSv4-only mounts not depend on rpcbind.  (LP: #1970264)
+
+ -- Sergio Durigan Junior <sergio.durigan@canonical.com>  Thu, 28 Apr 2022 17:20:37 -0400
+
+autofs (5.1.8-1ubuntu1) jammy; urgency=medium
+
+  * Fix authenticated cifs mount failure caught by DEP8  (LP: #1955851):
+    - d/t/smb-mount: fix setting the password of the smb test user
+    - d/p/fix-loop-under-run-in-cache_get_offset_parent.patch: fix crash
+      on s390x
+
+ -- Andreas Hasenack <andreas@canonical.com>  Thu, 20 Jan 2022 15:16:09 -0300
+
+autofs (5.1.8-1) unstable; urgency=medium
+
+  * New upstream release.
+  * debian/patches:
+    + Trivial rebase of some patches.
+  * debian/control:
+    + Bump Standards-Version: to 4.6.0. No changes needed.
+
+ -- Mike Gabriel <sunweaver@debian.org>  Wed, 01 Dec 2021 23:52:49 +0100
+
+autofs (5.1.7-1) unstable; urgency=medium
+
+  * New upstream release.
+    - autofs: Fix crash in sun_mount() (Closes: #892953).
+    - Use PKG_CHECK_MODULES to detect the libxml2 library. (Closes: #949055).
+  * debian/patches:
+    + Drop fix-autofs-schema.patch and make-bind-mounts-propagation-slave-by-
+      default.patch. Applied upstream.
+    + Trivially rebase patches.
+    + Add another typo fix to spelling-error-fixes.patch.
+  * debian/autofs.install:
+    + Install libautofs.so into bin:pkg autofs (for now).
+  * debian/control:
+    + Bump Standards-Version: to 4.5.1. No changes needed.
+  * debian/autofs.lintian-overrides:
+    + Ignore libautofs.so (share lib) for now.
+    + Ignore lintian complain about autofs.8 man page.
+  * debian/watch:
+    + Update format version to 4.
+
+ -- Mike Gabriel <sunweaver@debian.org>  Thu, 04 Feb 2021 13:36:20 +0100
+
+autofs (5.1.6-4) unstable; urgency=medium
+
+  * debian/patches:
+    + Add fix-autofs-schema.patch. Fix EQUALITY of automountInformation
+      in LDAP autofs.schema. (Closes: #968675).
+    + Add fix-nfs4-mounts-in-auto-net.patch. Follow-up of the nfs4 fix in
+      #533893. (Closes: #646625).
+  * debian/control:
+    + Use correct capitalization for Vcs-*: field tags.
+
+ -- Mike Gabriel <sunweaver@debian.org>  Mon, 26 Oct 2020 21:46:29 +0100
+
+autofs (5.1.6-3) unstable; urgency=medium
+
+  * debian/patches:
+    + Add make-bind-mounts-propagation-slave-by-default.patch. (Closes:
+      #795281).
+  * debian/control:
+    + Bump DH compat level to 13.
+    + Bump Standards-Version: to 4.5.0. No changes needed.
+
+ -- Mike Gabriel <sunweaver@debian.org>  Mon, 29 Jun 2020 13:21:47 +0200
+
+autofs (5.1.6-2) unstable; urgency=medium
+
+  [ Andreas Hasenack ]
+  * d/p/fix-lookup-ldap-crash.patch: fix crash on startup due to uninitialized
+    config.  (LP #1503034). (Closes: #901344).
+  * d/rules: Add LDFLAGS to avoid issues with accessing global variables in
+    shared libraries (LP #1470687, LP #1472115).
+
+ -- Mike Gabriel <sunweaver@debian.org>  Wed, 15 Jan 2020 23:04:23 +0100
+
+autofs (5.1.6-1) unstable; urgency=medium
+
+  * New upstream release.
+  * debian/patches:
+    + Rebase 11default_automaster_location.patch,
+      12disable_default_auto_master.patch and spelling-error-fixes.patch.
+    + Add two more spelling fixes to spelling-error-fixes.patch.
+  * debian/{control,compat}:
+    + Switch to debhelper-compat notation.
+    + Bump to DH compat level version 12.
+    + Drop autoconf from B-D.
+  * debian/control:
+    + Bump Standards-Version: to 4.4.1. No changes needed.
+    + Add Rules-Requires-Root: field and set it to "no".
+  * debian/rules:
+    + Drop --with systemd. No longer provided in DH compat level >= 11.
+
+ -- Mike Gabriel <sunweaver@debian.org>  Mon, 11 Nov 2019 18:45:45 +0100
+
+autofs (5.1.5-2) unstable; urgency=medium
+
+  * Upload to unstable as is.
+
+ -- Mike Gabriel <sunweaver@debian.org>  Fri, 02 Aug 2019 19:47:29 +0200
+
+autofs (5.1.5-1) experimental; urgency=medium
+
+  [ Mike Gabriel ]
+  * New upstream release.
+    - Make browsable_dirs option functional. Configurable in autofs.conf.
+      (Closes: #784301).
+    - Fix FTBFS with clang. (Closes: #757038).
+    - Fix specification of nfsvers=4.1 (with minor version numbers) in
+      auto.master. (Closes: #892374).
+  * debian/patches:
+    + Rebase some patches.
+    + Drop do-not-check-for-modprobe-procfs-or-load-module.patch,
+      fix-autofs-manpage-whatis.patch, fix-autofsconf-manpage-section.patch.
+      Fixes shipped by upstream.
+    + Add mount-hidden-samba-shares.patch. Fix regression between 5.0.8 and
+      5.1.1 regarding the mounting of hidden samba shares. (Closes: #787202,
+      #910367).
+    + Add spelling-error-fixes.patch, fixing tons of spelling fixes. Thanks
+      lintian.
+  * debian/rules:
+    + Add get-orig-source target.
+    + Evoke install_samples upstream Makefile target explicitly during
+      dh_auto_install.
+    + Enable all hardening flags.
+  * debian/control:
+    + Bump to Standards-Version: 4.3.0. No changes needed.
+    + Adopt autofs package. Thanks to Dmitry Smirnov and other contributors
+      for all the previous work. (Closes: #849148).
+    + Explicit B-D on pkg-config.
+    + Update Vcs-*: fields. Packaging has moved to salsa.debian.org.
+      (Closes: #902565).
+    + Add B-D on dpkg-dev (>= 1.16.1.1~) for full hardening flag support.
+    + Use secure URL in Homepage: field.
+  * debian/source/options:
+    + Drop custom compression for debian/ folder's tarball.
+  * debian/autofs-ldap.<scripts>:
+    + Ensure file permissions of /etc/autofs_ldap_auth.conf are set to
+      root:root:0600 via dpkg-statoverride. (Closes: #805028).
+  * debian/autofs.service:
+    + Add nfs-client.target to Wants= key. Hopefully, this is sufficient to
+      fix #842199, if not, please reopen the bug. (Closes: #842199).
+    + PID file is in /run, not /var/run (which is a symlink to /run).
+    + Add Documentation= key.
+  * debian/copyright:
+    + Drop outdated information from main header. Use https:// in URLs.
+
+  [ Stefan Potyra ]
+  * debian/control:
+    + Add libtirpc-dev to build-depends.
+  * debian/rules:
+    + Add option --with-libtirpc to configure. (Closes: #737679, #709366).
+
+  [ Andreas Hasenack ]
+  * debian/tests:
+    + Add nfs-mount and smb-mount tests. (Closes: #901554).
+
+  [ Vincent McIntyre ]
+  * debian/patches:
+    + Add hardening-flags.patch. Assure that automount is built with
+      DAEMON_CFLAGS. (Closes: #864857).
+
+ -- Mike Gabriel <sunweaver@debian.org>  Thu, 14 Mar 2019 19:42:50 +0100
+
+autofs (5.1.2-4) unstable; urgency=medium
+
+  * QA upload.
+  * Fix doubled .conf in a man page's filename, fixing FTBFS.
+    (Closes: #903167)
+
+ -- Adam Borowski <kilobyte@angband.pl>  Mon, 09 Jul 2018 02:09:42 +0200
+
+autofs (5.1.2-3) unstable; urgency=medium
+
+  * QA upload.
+
+  [ Laurent Bigonville ]
+  * debian/control: Switch all the packages to Arch:linux-any
+
+  [ Andreas Henriksson ]
+  * Add e2fsprogs to build-dep and recommends (Closes: #887284)
+  * Drop incorrect depends on lsb-base
+  * Drop incorrect *build*-dep on lsb-base
+
+ -- Andreas Henriksson <andreas@fatal.se>  Sat, 17 Feb 2018 22:24:44 +0100
+
+autofs (5.1.2-2) unstable; urgency=medium
+
+  * QA upload.
+  [ Laurent Bigonville ]
+  * Orphan the package, see #849148
+  * debian/watch: Update the URL now that kernel.org ftp has been shutdown
+    (Closes: #864849)
+  * debian/control: Add dependency against lsb-base (Closes: #864852)
+  * debian/autofs.postrm: Remove /etc/autofs.conf on purge (Closes: #788129)
+  * debian/autofs.dirs: Install empty /etc/auto.master.d directory (Closes:
+    #884233)
+  * debian/rules: Don't strip the binaries during the build so the dbgsym
+    packages actually contain the debugging symbols
+  * debian/control: Bump Standards-Version to 4.1.2 and bump the packages
+    priority from extra to optional, the former is now deprecated
+  * debian/control: Drop dh-systemd build-dependency and bump debhelper to (>=
+    9.20160709)
+  * debian/rules: Really enable the force shutdown signal handler as intended
+    (Closes: #743654)
+  * d/p/fix-autofsconf-manpage-section.patch: Fix manpage section
+  * d/p/fix-autofs-manpage-whatis.patch: Fix whatis entry for autofs.8
+    manpage (Closes: #864853)
+  * Move autofs.conf.5 manpage from autofs-ldap to the main autofs package
+    (Closes: #870653)
+  * debian/rules: Set --enable-sloppy-mount instead of modifying the
+    include/config.h file manually
+  * debian/control: Drop autofs5 transitional packages (Closes: #878205)
+
+  [ Timo Aaltonen ]
+  * Replace fix-ssldir.patch with fix-ssslib-search.patch, which is more
+    upstreamable. Preseed sssldir in rules.
+
+ -- Laurent Bigonville <bigon@debian.org>  Wed, 13 Dec 2017 10:28:56 +0100
+
+autofs (5.1.2-1) unstable; urgency=medium
+
+  * New upstream release [June 2016] (Closes: #846054).
+  * Build with "--disable-mount-locking" (Closes: #721331).
+  * service: fixed path to "kill" utility (Closes: #785563).
+  * Modernised and converted Vcs URLs to HTTPS.
+  * Standards-Version: 3.9.8.
+  * Removed myself from Uploaders.
+
+ -- Dmitry Smirnov <onlyjob@debian.org>  Fri, 23 Dec 2016 10:34:46 +1100
+
+autofs (5.1.1-1) unstable; urgency=low
+
+  * New upstream release [April 2015].
+  * Install new "/etc/autofs.conf".
+  * Patchworks: dropped obsolete patches; marked forwarded patches as such.
+  * Removed old "14avoid_sock_cloexec.patch" with obsolete workaround for
+    old kernels.
+  * Upload to unstable.
+
+ -- Dmitry Smirnov <onlyjob@debian.org>  Wed, 29 Apr 2015 13:06:53 +1000
+
+autofs (5.1.0-1) experimental; urgency=low
+
+  [ Timo Aaltonen <tjaalton@ubuntu.com> ]
+  * Add support for sssd backend (Closes: #762843).
+    - control: Add sssd-common to build-depends.
+    - rules, fix-sssldir.diff: Check the multiarch lib path when searching
+      for libsss_autofs.so
+
+  [ Salvatore Bonaccorso <carnil@debian.org> ]
+  * Scan for upstream tarballs in various formats.
+    The previous watch files only looked for bz2 compressed upstream
+    tarballs. Upstream switched to tar.xz and tar.gz only since 5.0.9.
+    Adjust the watch file to catch new upstream versions. (Closes: #779438)
+
+  [ Dmitry Smirnov <onlyjob@debian.org> ]
+  * Standards-Version to 3.9.6.
+  * New upstream release [June 2014] (Closes: #779441, #741064, #743939).
+  * Refreshed patches.
+  * Dropped obsolete "default-autofs-remove-USE_MISC_DEVICE.patch".
+  * Install native systemd service using "dh-systemd".
+
+ -- Dmitry Smirnov <onlyjob@debian.org>  Fri, 10 Apr 2015 11:36:01 +1000
+
+autofs (5.0.8-2) unstable; urgency=medium
+
+  [ Salvatore Bonaccorso <carnil@debian.org> ]
+  * Add patches for CVE-2014-8169 (Closes: #779591).
+    When a program map uses an interpreted languages like python it is
+    possible to load and execute arbitray code from a user home directory.
+    This is because the standard environment variables are used to locate
+    and load modules when using these languages. To avoid that, a prefix to
+    these environment names is added so that they aren't used for this
+    purpose. The prefix used is "AUTOFS_" and is not configurable.
+    Additionally a configuration option to force the use of program map
+    standard environment variables is added (FORCE_STANDARD_PROGRAM_MAP_ENV).
+
+  [ Dmitry Smirnov <onlyjob@debian.org> ]
+  * Refreshed other patches as needed.
+
+ -- Dmitry Smirnov <onlyjob@debian.org>  Thu, 19 Mar 2015 18:38:23 +1100
+
+autofs (5.0.8-1) unstable; urgency=low
+
+  * New upstream release [October 2013] (Closes: #729023).
+  * "debian/copyright":
+    + corrected BSD-3-clause license name.
+    + added Michael Tokarev's copyright.
+  * "debian/control":
+    + Standards to 3.9.5.
+    + updated my email address.
+  * Patches removed (applied-upstream):
+    - 0001-autofs-5.0.7-fix-nobind-sun-escaped-map-entries.patch
+    - 0002-autofs-5.0.7-fix-use-cache-entry-after-free-mistake.patch
+    - 0004-autofs-5.0.7-fix-parse-buffer-initialization.patch
+    - 0005-autofs-5.0.7-fix-typo-in-automount-8.patch
+    - allow-nsswitch.conf-to-not-contain-automount-lines.patch
+    - save-hesiod-libs-correctly.patch
+  * Patches updated:
+    + 11default_automaster_location.patch
+    + manpages.patch
+    + manpages-hyphen.patch
+    + default-autofs-remove-USE_MISC_DEVICE.patch
+    + do-not-check-for-modprobe-procfs-or-load-module.patch
+    + link-daemon-with-lpthread.patch
+    + fix-ldflags.patch
+    + remove-kernel-mount.nfs-version-check.patch
+  * "autofs-ldap":
+    + install "samples/auto.master.ldap".
+
+ -- Dmitry Smirnov <onlyjob@debian.org>  Fri, 07 Mar 2014 12:52:31 +1100
+
+autofs (5.0.7-3) unstable; urgency=low
+
+  * pidfile is in /var/run not /run: fix the initscript
+    (forgotten part of #682675)
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Wed, 10 Oct 2012 21:28:40 +0400
+
+autofs (5.0.7-2) unstable; urgency=low
+
+  * force transfer ucf autofs5=>autofs ownership for all ucf-managed
+    files (Closes: #689747)
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Sat, 06 Oct 2012 13:06:37 +0400
+
+autofs (5.0.7-1) unstable; urgency=low
+
+  * new upstream (5.0.7) release.  It brings the following changes:
+    - fixed remount deadlock, and several other locking fixes
+    - fixed umount recovery for busy direct mounts
+    - removed old code (mount-move which was fixed in 5.0.6-4 #686438)
+    - fix hosts lookup module to be more robust
+    - implemented abilty to re-read indirect maps on the fly (sighup)
+    - fixes for nfs handling to be more robust
+    - several fixes for multi-mount entries
+    - several fixes for NFSv4 mounts (Closes: #675798)
+    and a few more small/misc fixes.  This is all-bugfix changes,
+    making the code more robust and less buggy.
+  * removed --disable-mount-move configure option, not needed anymore.
+  * removed autofs-5.0.6-upstream-git.patch.
+  * refreshed manpages-hyphen.patch.
+  * added selected fixes from upstream git, up to upstream/master commit
+    9872cdbf9f1588174121e6ffe6f7509cde2d98e9:
+    - 0001-autofs-5.0.7-fix-nobind-sun-escaped-map-entries.patch (Closes: #678408)
+    - 0002-autofs-5.0.7-fix-use-cache-entry-after-free-mistake.patch
+    - 0004-autofs-5.0.7-fix-parse-buffer-initialization.patch
+    - 0005-autofs-5.0.7-fix-typo-in-automount-8.patch
+  * added remove-kernel-mount.nfs-version-check.patch to stop automount from
+    checking for very old mount.nfs or kernel.  The check isn't necessary
+    (that's pre-squeeze versions, so not even versioned Breaks are needed
+    anymore), but it is also harmful, since automount spawns mount.nfs at
+    startup and confuses upstart and systemd who start tracking wrong
+    process.  The patch just removes these checks assuming we always use
+    recent enough versions.  (Closes: #678555)
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Wed, 26 Sep 2012 21:15:05 +0400
+
+autofs (5.0.6-4) unstable; urgency=low
+
+  * configure with --disable-mount-move -- upstream even removed the
+    code in question for 5.0.7 release (Closes: #686438)
+  * remove autofs5.postrm in autofs.postinst to cope with old maintscript
+    removing our configfiles.  See comments in autofs.postinst for more
+    details (Closes: #686146)
+  * added allow-nsswitch.conf-to-not-contain-automount-lines.patch
+    (submitted to upstream too) to stop automount from complaining
+    when nsswitch.conf does not mention autofs (which is almost every
+    install anyway).  (Closes: #682266, #602090)
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Sat, 22 Sep 2012 13:07:46 +0400
+
+autofs (5.0.6-3) unstable; urgency=low
+
+  [Michael Tokarev]
+  * almost completely rewrote the startup script, make it cleaner,
+    consistent and actually returning proper exit codes.  Removed
+    $"" constructs too, dash apparently does not understand these.
+    (Closes: #677520, #683936)
+  * transfer ownership of ucf-conffiles forcibly only if they're
+    owned by autofs5, not by any other package.
+  * run ucf --purge in postrm only if it is installed, and in the
+    right order too (Closes: #685468)
+  * added filagdir.patch - fix a typo in configure.in which prevents
+    from specifying runtime directory (Closes: #678384)
+  * use /var/run not /run for runtime files (we don't really need
+    it to be available on upgrade, before initscripts et all has
+    been replaced) (Closes: #682675)
+
+  [Dmitry Smirnov]
+  * setting current team leader as Maintainer
+  * pass CPPFLAGS to fix "hardening-no-fortify-functions"
+  * new fix-ldflags.patch to avoid dropping LDFLAGS in order to
+    fix "hardening-no-relro"
+  * updated manpages-hyphen.patch
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Sat, 25 Aug 2012 16:13:02 +0400
+
+autofs (5.0.6-2) unstable; urgency=low
+
+  [Dmitry Smirnov]
+  * minor update to 'manpages.patch' (Closes: #603092)
+  * added VCS links
+
+  [Michael Tokarev]
+  * conffile installation:
+    - do no ship /etc/default/autofs (Closes: #673796)
+    - install /etc/init.d/autofs manually (dh_installinit have issue finding it)
+    - removed ugly symlinks debian/autofs.{default,init}
+    - list bin programs and modules more explicitly in debian/*.install
+    - transfer ucf conffile ownership from old autofs5 to autofs
+  * removed debian/configure_override
+  * recommend kmod|module-init-tools
+  * ship debian/autofs.init instead of heavily patching upstream script
+  * simplify (and fix) debian/autofs.init a bit in loading/checking modules,
+    and use /bin/sh instead of /bin/bash
+  * remove messing with /dev/autofs misc device in initscript,
+    it is managed by udev or devtmpfs
+  * remove (now unused) USE_MISC_DEVICE definition from default/autofs too
+  * do not check for modprobe or procfs in configure, since module loading
+    is ifdef'ed out in the code, and #ifdef the missing parts too
+    (do-not-check-for-modprobe-procfs-or-load-module.patch)
+  * always define standard program paths when building even if the corresponding
+    utility isn't installed (e2fsck, mount, mount.nfs).  There is no need to
+    check presence of standard utilities or verify their standard abilities.
+  * also define other paths explicitly instead of relying on a config-time
+    search - the build will be wrong if some directory (eg, /etc/sysconfig)
+    will be present during configure time.
+  * autoreconf and clean autoconf-generated files, FTBFS (Closes: #674391)
+    This still does not make quilt patches easily revertable, since we
+    don't save old configure and upstream changes patches configure to,
+    so once regenerated by autoreconf, it will be different.
+  * do not use $DEB_HOST_MULTIARCH in debian/rules without setting it
+  * two patches:
+      debian/patches/link-daemon-with-lpthread.patch
+      debian/patches/save-hesiod-libs-correctly.patch
+    to fix gold/-Wl,-no-as-needed FTBFS.
+  * remove individual upstream patches from debian/patches and replace them
+    with single autofs-5.0.6-upstream-git.patch - all upstream commits in
+    master branch since release_5_0_6 tag.  Update this patch to include
+    all current fixes too (up to 2012-06-01).
+  * added debian/TODO file
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Thu, 24 May 2012 10:53:13 +0400
+
+autofs (5.0.6-1) unstable; urgency=low
+
+  * New upstream release
+    - "mount(nfs): no hosts available" (Closes: #608459).
+    - "new upstream version available" (Closes: #602933).
+    - "autofs mounted directory are never dismounted" (Closes: #521165).
+    - "autofs5 does not support recursive mount" (Closes: #626473).
+    - "autofs5 crashed in a nested setup in combination with
+       negative lookups on *" (Closes: #617317).
+    - "autofs5-ldap: simple bind auth feature request" (Closes: #595808).
+    - "autofs5-ldap: SASL auth broken" (Closes: #568813).
+    - "nobind option to stop bind-mounting local dirs" (Closes: #557337).
+  * package rename: dropping '5' from package names (Closes: #655351).
+  * NMU changes acknowledged (Closes: #603491, #583094).
+  * register /etc/default/autofs with ucf (Closes: #556961).
+  * debian/copyright to DEP-5 format; upstream copyright audit.
+  * packaging update:
+    * use debhelper & compat version 9.
+    * standards to 3.9.3
+    * lintian-override for 'non-standard-file-perm'
+    * install missing autofs_ldap_auth.conf.5 man page
+    * source format to version 3 and .xz compression
+    * debian/rules rewritten in debhelper style
+  * patchworks:
+    + replacing upstream patches with new patchset as of 2012-04-23.
+    + replacing dpatch with quilt (Closes: #668077)
+    + new patch to correct manpages spelling (Closes: #660075)
+      thanks to Oz Nahum Tiram and Javi Merino
+    + updated SYSV init script patch:
+      * removed bashisms (Closes: #626435).
+      * introduce 'status' support to SYSV script
+        (Closes: #651978, #667811, #565507).
+      * adding 'slapd' to Should-Start/Stop (Closes: #600764, #659616).
+      * LSB output (Closes: #567805) thanks to Petter Reinholdtsen.
+  * declare myself as Maintainer (adopting package)
+
+ -- Dmitry Smirnov <onlyjob@member.fsf.org>  Mon, 23 Apr 2012 00:30:51 +1000
+
+autofs5 (5.0.4-3.2) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * autofs5-ldap: install autofs.schema in /etc/ldap/schema/ like all the
+    other schema providing packages in Debian. (Closes: #602765)
+
+ -- Holger Levsen <holger@debian.org>  Sun, 14 Nov 2010 16:48:23 +0000
+
+autofs5 (5.0.4-3.1) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * add dh_fixperms -Xdebian/autofs5-ldap/etc/autofs_ldap_auth.conf to fix perms
+    (Closes: #557865)
+
+ -- Patrick Winnertz <winnie@debian.org>  Sat, 23 Jan 2010 14:54:16 +0100
+
+autofs5 (5.0.4-3) unstable; urgency=low
+
+  * Fix LSB initscript header to use keywords that
+    insserv knows about. Closes: #541841.
+  * Bump Standards version to 3.8.3.
+    * Add README.source.
+
+  * Upload sponsored by Petter Reinholdtsen.
+
+ -- Jan Christoph Nordholz <hesso@pool.math.tu-berlin.de>  Fri, 28 Aug 2009 21:24:14 +0200
+
+autofs5 (5.0.4-2) unstable; urgency=low
+
+  * Fast forward through the upstream patches until 2009/07/12.
+  * Adapt patch 10lsb_initscript, partially applied upstream.
+  * Bump Standards version to 3.8.2.
+  * Work around a typo in ./configure.
+  * Add a Homepage field.
+  * Clarify the GPL version.
+  * Add an example line suitable for nfsv4 environments to the
+    shipped auto.net. Closes: #533893.
+
+ -- Jan Christoph Nordholz <hesso@pool.math.tu-berlin.de>  Sat, 25 Jul 2009 17:29:51 +0200
+
+autofs5 (5.0.4-1) unstable; urgency=low
+
+  * New upstream version (5.0.4 plus patchset as of 2009/03/09).
+    * Closes: #518728.
+    * Remove dpatch 14, applied upstream.
+  * New dpatch 14 to avoid using the relatively young SOCK_CLOEXEC
+    feature.
+  * Only invoke 'make clean' on clean target so ./configure isn't
+    purged.
+  * Fix a typo in the postinst regarding the ucf conffile handling.
+  * Add 'set -e' to package maintenance scripts.
+  * Drop unnecessary /var/run/autofs from package.
+
+ -- Jan Christoph Nordholz <hesso@pool.math.tu-berlin.de>  Mon, 09 Mar 2009 01:16:48 +0100
+
+autofs5 (5.0.3-3) unstable; urgency=high
+
+  * Link ldap module against libssl, too. Closes: #490352.
+  * High urgency due to RC bugfix and no other changes.
+
+ -- Jan Christoph Nordholz <hesso@pool.math.tu-berlin.de>  Fri, 11 Jul 2008 18:07:16 +0200
+
+autofs5 (5.0.3-2) unstable; urgency=low
+
+  * Update upstream patchset (2008/06/12) - five new patches.
+  * Bump Standards version to 3.8.0, debhelper to v7.
+  * Link ldap module against kerberos. Closes: #485470.
+  * /dev/urandom is sufficiently random for our purpose - use it
+    instead of /dev/random, which might block. Closes: #481257.
+  * Add watch file.
+
+ -- Jan Christoph Nordholz <hesso@pool.math.tu-berlin.de>  Thu, 12 Jun 2008 22:24:27 +0200
+
+autofs5 (5.0.3-1) unstable; urgency=low
+
+  * Upload to unstable.
+  * New upstream version 5.0.3 plus current patchset (as of 2008/04/27).
+  * Bump Standards to 3.7.3, debhelper to v6.
+  * Add build-dependency on libxml2-dev.
+
+ -- Jan Christoph Nordholz <hesso@pool.math.tu-berlin.de>  Mon, 28 Apr 2008 15:55:37 +0200
+
+autofs5 (5.0.2-2) experimental; urgency=low
+
+  * Work around configure's automatic detection attempts of /sbin/modprobe
+    and the /proc filesystem. In the former case, this saves us an
+    unnecessary build-dependency.
+    This should get the autobuilders going.
+  * Add Recommends: module-init-tools in accordance with #416597.
+
+ -- Jan Christoph Nordholz <hesso@pool.math.tu-berlin.de>  Tue, 17 Jul 2007 13:33:12 +0200
+
+autofs5 (5.0.2-1) experimental; urgency=low
+
+  * Initial release:
+    * Upstream autofs 5.0.2 including the patches:
+      autofs-5.0.2-add-krb5-include
+      autofs-5.0.2-bad-proto-init
+      autofs-5.0.2-add-missing-multi-support
+      autofs-5.0.2-add-multi-nsswitch-lookup
+    * Own patches:
+      * Add LSB header to initscript.
+      * Configure the default auto.master location to be in /etc.
+  * Build the usual package triplet (plain, -ldap and -hesiod).
+  * Build the ldap module with SASL support.
+  * Be cautious and upload to experimental.
+
+ -- Jan Christoph Nordholz <hesso@pool.math.tu-berlin.de>  Fri, 06 Jul 2007 19:26:12 +0200

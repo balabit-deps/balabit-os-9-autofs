@@ -1,0 +1,4 @@
+# non-standard-file-perm etc/autofs_ldap_auth.conf 0600 != 0644
+# Bug-debian: http://bugs.debian.org/557865
+# Bug-Debian: http://bugs.debian.org/583094
+non-standard-file-perm

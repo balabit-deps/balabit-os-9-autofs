@@ -1,0 +1,16 @@
+Last-Update: 2014-03-07
+Author: Dmitry Smirnov <onlyjob@member.fsf.org>
+Forwarded: yes
+Description: avoid dropping LDFLAGS to fix "hardening-no-relro"
+
+--- a/Makefile.rules
++++ b/Makefile.rules
+@@ -45,7 +45,7 @@
+ CXX       ?= g++
+ CXXFLAGS  ?= $(CFLAGS)
+ LD        ?= ld
+-SOLDFLAGS = -shared
++SOLDFLAGS = $(LDFLAGS) -shared
+ 
+ CFLAGS += -D_REENTRANT -D_FILE_OFFSET_BITS=64
+ LIBS += -lpthread

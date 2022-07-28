@@ -1,0 +1,3 @@
+samples/autofs.schema		etc/ldap/schema
+usr/lib/*/autofs/lookup_ldap*
+etc/autofs_ldap_auth.conf
