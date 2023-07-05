@@ -5,3 +5,7 @@ Restrictions: isolation-machine, needs-root, allow-stderr
 Tests: nfs-mount
 Depends: @, nfs-common, nfs-server
 Restrictions: isolation-machine, needs-root, allow-stderr
+
+Tests: ldap-map-sasl-auth
+Depends: @, autofs-ldap, nfs-common, nfs-server, slapd, ldap-utils, schema2ldif, sasl2-bin, libsasl2-modules, libsasl2-modules-db, libsasl2-modules-gssapi-mit, krb5-kdc, krb5-admin-server
+Restrictions: isolation-machine, needs-root

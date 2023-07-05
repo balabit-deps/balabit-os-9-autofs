@@ -12,3 +12,5 @@ fix-nfs4-mounts-in-auto-net.patch
 fix-loop-under-run-in-cache_get_offset_parent.patch
 fix-nfsv4-only-mounts-should-not-use-rpcbind.patch
 autofs-5.1.8-ldap-kerberos-leads-to-automount-hang-p.patch
+autofs-5.1.8-support-SCRAM-for-SASL-binding.patch
+ntlm-crammd5-require-credentials.patch

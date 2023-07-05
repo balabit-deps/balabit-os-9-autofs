@@ -1,3 +1,17 @@
+autofs (5.1.8-1ubuntu1.3) jammy; urgency=medium
+
+  * Support SASL SCRAM authentication (LP: #1987992):
+    - d/p/autofs-5.1.8-support-SCRAM-for-SASL-binding.patch: allow
+      SCRAM-SHA-*
+  * d/t/control, d/t/ldap-map-sasl-auth: DEP8 tests for SASL
+    authentication mechanisms in LDAP maps, including shared secret
+    mechanisms and GSSAPI ones
+  * Fix NTLM and CRAM-MD5 SASL authentication (LP: #2023595):
+    - d/p/ntlm-crammd5-require-credentials.patch: fix NTLM and CRAM-MD5
+    - d/t/ldap-map-sasl-auth: add NTLM and CRAM-MD5 to the test
+
+ -- Andreas Hasenack <andreas@canonical.com>  Wed, 05 Jul 2023 14:21:32 -0300
+
 autofs (5.1.8-1ubuntu1.2) jammy; urgency=medium
 
   * d/p/autofs-5.1.8-ldap-kerberos-leads-to-automount-hang-p.patch: fix

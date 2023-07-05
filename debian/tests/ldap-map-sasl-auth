@@ -1,0 +1,368 @@
+#!/bin/bash
+
+set -e
+
+sasluser="user$$"
+saslpass="pass$$"
+ldap_admin_pw="ldapadminpw$$"
+mydomain="example.fake"
+realm="${mydomain^^}" # uppercase
+myhostname="server.${mydomain}"
+ldap_suffix="dc=example,dc=fake"
+ldap_admin_dn="cn=admin,${ldap_suffix}"
+ldap_service_principal="ldap/${myhostname}"
+# Jammy only supports SCRAM-SHA-{1,256} of that family
+shared_secret_mechs="DIGEST-MD5 SCRAM-SHA-1 SCRAM-SHA-256 NTLM CRAM-MD5"
+gssapi_mechs="GSSAPI GSS-SPNEGO"
+test_file="test_file_$$"
+
+cleanup() {
+    if [ $? -ne 0 ]; then
+        echo "## Something failed, gathering logs"
+        echo
+        echo "## syslog:"
+        tail -n 300 /var/log/syslog
+        echo
+        echo "## mounts:"
+        mount
+    fi
+    rm -f /etc/sasldb2
+    # This is not meant to fully restore the state, but just don't leave a file
+    # with clear text and easy to guess credentials lying around.
+    # From sasl2-bin's postinst
+    echo '!' | saslpasswd2 -c 'no:such:user'
+    saslpasswd2 -d 'no:such:user'
+    chmod 0640 /etc/sasldb2
+    chown root:sasl /etc/sasldb2
+    rm -rf /storage
+    rm -rf /run/systemd/system/autofs.service.d
+    systemctl daemon-reload
+}
+
+trap cleanup EXIT
+
+check_slapd_ready() {
+    ldapwhoami -Q -Y EXTERNAL -H ldapi:/// > /dev/null 2>&1
+}
+
+wait_service_ready() {
+    local service="${1}"
+    local check_function="${2}"
+	local -i tries=5
+    echo -n "Waiting for ${service} to be ready "
+    while [ ${tries} -ne 0 ]; do
+        echo -n "."
+        if "${check_function}"; then
+            echo
+            break
+        fi
+        tries=$((tries-1))
+        sleep 1s
+    done
+    if [ ${tries} -eq 0 ]; then
+        echo "ERROR: ${service} is not ready"
+        return 1
+    fi
+}
+
+setup_slapd() {
+    local domain="$1"
+    local password="$2"
+    # MUST use REAL TABS as delimiters below!
+    debconf-set-selections << EOF
+slapd	slapd/domain	string	${domain}
+slapd	shared/organization	string	${domain}
+slapd	slapd/password1	password	${password}
+slapd	slapd/password2	password	${password}
+EOF
+    rm -rf /var/backups/*slapd* /var/backups/unknown*ldapdb
+    # so that slapd can read /etc/sasldb2
+    gpasswd -a openldap sasl > /dev/null 2>&1 || :
+    dpkg-reconfigure -fnoninteractive -pcritical slapd 2>&1
+    systemctl restart slapd # http://bugs.debian.org/1010678
+    wait_service_ready slapd check_slapd_ready
+    echo
+    echo "## Configuring slapd"
+    # olcSaslAuxprops: sasldb
+    # Configures openldap to check SASL secrets using the sasldb plugin and
+    # only allows authenticated users to read the ou=auto.indirect subtree.
+    # This removes the chance of any anonymous bind fallback by autofs from
+    # working, so we can be sure we are using an authenticated connection.
+    ldapmodify -Y EXTERNAL -H ldapi:/// 2>&1 <<EOF
+dn: cn=config
+changetype: modify
+replace: olcSaslAuxprops
+olcSaslAuxprops: sasldb
+-
+replace: olcLogLevel
+olcLogLevel: stats
+
+dn: olcDatabase={1}mdb,cn=config
+changetype: modify
+add: olcAccess
+olcAccess: {2}to dn.subtree="ou=auto.indirect,${ldap_suffix}"
+  by users read
+  by * none
+
+EOF
+    echo
+    echo "## Adding autofs schema to ldap"
+    ldap-schema-manager -i autofs.schema 2>&1
+
+    echo
+    echo "## Adding automount maps to ldap"
+    ldapadd -x -D "${ldap_admin_dn}" -w "${ldap_admin_pw}" <<EOF
+dn: ou=auto.indirect,${ldap_suffix}
+objectClass: top
+objectClass: automountMap
+ou: auto.indirect
+
+dn: cn=/,ou=auto.indirect,${ldap_suffix}
+objectClass: automount
+cn: /
+automountInformation: -fstype=nfs4 ${myhostname}:/&
+
+EOF
+
+}
+
+adjust_hostname() {
+    local myhostname="$1"
+
+    echo "${myhostname}" > /etc/hostname
+    hostname "${myhostname}"
+    if ! grep -qE "${myhostname}" /etc/hosts; then
+        # just so it's resolvable
+        echo "127.0.1.10 ${myhostname}" >> /etc/hosts
+    fi
+}
+
+create_realm() {
+    local realm_name="$1"
+    local kerberos_server="$2"
+
+    # start fresh
+    rm -rf /var/lib/krb5kdc/*
+    rm -rf /etc/krb5kdc/*
+    rm -f /etc/krb5.keytab
+
+    # setup some defaults
+    cat > /etc/krb5kdc/kdc.conf <<EOF
+[kdcdefaults]
+    kdc_ports = 750,88
+[realms]
+    ${realm_name} = {
+	    database_name = /var/lib/krb5kdc/principal
+	    admin_keytab = FILE:/etc/krb5kdc/kadm5.keytab
+	    acl_file = /etc/krb5kdc/kadm5.acl
+	    key_stash_file = /etc/krb5kdc/stash
+	    kdc_ports = 750,88
+	    max_life = 10h 0m 0s
+	    max_renewable_life = 7d 0h 0m 0s
+	    default_principal_flags = +preauth
+    }
+EOF
+
+    cat > /etc/krb5.conf <<EOF
+[libdefaults]
+    default_realm = ${realm_name}
+    kdc_timesync = 1
+    ccache_type = 4
+    forwardable = true
+    proxiable = true
+    fcc-mit-ticketflags = true
+[realms]
+	${realm_name} = {
+		kdc = ${kerberos_server}
+		admin_server = ${kerberos_server}
+	}
+EOF
+    echo "# */admin *" > /etc/krb5kdc/kadm5.acl
+
+    # create the realm
+    kdb5_util create -s -P secretpassword
+
+    # restart services
+    systemctl restart krb5-kdc.service krb5-admin-server.service
+}
+
+create_krb_principal() {
+    local principal="$1"
+    local password="$2"
+
+    if [ -n "${password}" ]; then
+        kadmin.local -q "addprinc -pw ${password} ${principal}" 2>&1
+    else
+        kadmin.local -q "addprinc -randkey ${principal}" 2>&1
+    fi
+}
+
+extract_keytab() {
+    local principal="$1"
+
+    kadmin.local -q "ktadd ${principal}"
+}
+
+create_exports() {
+    mkdir -m 0755 -p /storage
+    cat > /etc/exports <<EOF
+/storage *(rw,sync,no_subtree_check)
+EOF
+    date > /storage/${test_file}
+    exportfs -rav
+}
+
+# we restart autofs a lot during this test
+override_systemd_throttling_autofs() {
+    mkdir -p /run/systemd/system/autofs.service.d
+    cat > /run/systemd/system/autofs.service.d/override.conf <<EOF
+[Unit]
+StartLimitIntervalSec=0
+EOF
+    systemctl daemon-reload
+}
+
+configure_autofs_ldap_auth_type() {
+    local authtype="${1}"
+    local -r conf_file="/etc/autofs_ldap_auth.conf"
+
+    if echo "${shared_secret_mechs}" | grep -qw "${authtype}"; then
+        cat > "${conf_file}" <<EOF
+<?xml version="1.0" ?>
+<!--
+This files contains a single entry with multiple attributes tied to it.
+See autofs_ldap_auth.conf(5) for more information.
+-->
+
+<autofs_ldap_sasl_conf
+    usetls="no"
+    tlsrequired="no"
+    authrequired="yes"
+    user="${sasluser}@${mydomain}"
+    authtype="${authtype}"
+    secret="${saslpass}"
+/>
+EOF
+    elif echo "${gssapi_mechs}" | grep -qw "${authtype}"; then
+        cat > "${conf_file}" <<EOF
+<?xml version="1.0" ?>
+<!--
+This files contains a single entry with multiple attributes tied to it.
+See autofs_ldap_auth.conf(5) for more information.
+-->
+
+<autofs_ldap_sasl_conf
+    usetls="no"
+    tlsrequired="no"
+    authrequired="yes"
+    authtype="${authtype}"
+    clientprinc="${sasluser}@${realm}"
+    credentialcache="/tmp/krb5cc_$(id -u)"
+/>
+EOF
+    fi
+    chown root:root "${conf_file}"
+    chmod 0600 "${conf_file}"
+    systemctl restart autofs.service
+}
+
+test_autofs_with_sasl_mech() {
+    local mech="${1}"
+    local output=""
+
+    configure_autofs_ldap_auth_type "${mech}"
+    echo
+
+    echo "## Confirming target is not mounted"
+    # careful to not inadvertently trigger the mount by accessing it,
+    # i.e., don't attempt to list /mnt/storage
+    output=$(ls -la /mnt/)
+    echo "${output}"
+    if echo "${output}" | grep -q storage; then
+        echo "## FAIL, target directory should be clear"
+        exit 1
+    fi
+    echo
+
+    echo "## Triggering a mount, and checking that the mountpoint has the test file"
+    # XXX global var test_file
+    ls -la /mnt/storage/${test_file}
+    echo
+    echo "## Checking that the mountpoint is nfsv4"
+    findmnt -M /mnt/storage -t nfs4
+    echo
+}
+
+
+override_systemd_throttling_autofs
+
+adjust_hostname "${myhostname}"
+
+echo "## Setting up Kerberos"
+create_realm "${realm}" "${myhostname}"
+create_krb_principal "${sasluser}" "${saslpass}"
+create_krb_principal "${ldap_service_principal}"
+extract_keytab "${ldap_service_principal}"
+chgrp sasl /etc/krb5.keytab
+chmod g+r /etc/krb5.keytab
+echo
+
+echo "## Setting up slapd"
+setup_slapd "${mydomain}" "${ldap_admin_pw}"
+echo
+
+echo "## Populating NFS export"
+create_exports
+echo
+
+echo "## Creating test user ${sasluser} in sasldb"
+rm -f /etc/sasldb2
+echo -n "${saslpass}" | saslpasswd2 -c -p "${sasluser}" -u "${mydomain}"
+chown root:sasl /etc/sasldb2
+chmod 0640 /etc/sasldb2
+echo
+
+echo "## Testing shared secret mechanism auth one by one before letting autofs try it"
+echo
+for mech in ${shared_secret_mechs}; do
+    echo "Testing mechanism ${mech}"
+    ldapwhoami -Y "${mech}" -U "${sasluser}"@"${mydomain}" -w "${saslpass}" 2>&1
+    echo
+done
+
+echo "## Testing GSSAPI mechanisms before letting autofs try it"
+echo
+echo "${saslpass}" | timeout --verbose 30 kinit "${sasluser}"
+for mech in ${gssapi_mechs}; do
+    echo "Testing mechanism ${mech}"
+    ldapwhoami -Y "${mech}" 2>&1
+    echo
+done
+
+echo "## Adding automount to nsswitch.conf"
+if ! grep -qE "^automount:" /etc/nsswitch.conf; then
+    echo "automount: files ldap" >> /etc/nsswitch.conf
+else
+    sed -i -r "s,^automount:.*,automount: files ldap," /etc/nsswitch.conf
+fi
+echo
+
+echo "## Setting up autofs"
+# "nobind" tells autofs to not try to bind mount if it detects the mount is
+# from localhost, i.e., we REALLY want to use NFS
+echo "/mnt ldap://${myhostname}/ou=auto.indirect,${ldap_suffix} nobind" > /etc/auto.master
+echo
+
+echo "## Testing autofs with SASL shared secret mechanisms"
+echo
+for mech in ${shared_secret_mechs}; do
+    echo "## Configuring autofs to use mechanism ${mech}"
+    test_autofs_with_sasl_mech "${mech}"
+done
+
+echo "## Testing autofs with SASL GSSAPI mechanisms"
+echo
+for mech in ${gssapi_mechs}; do
+    echo "## Configuring autofs to use mechanism ${mech}"
+    test_autofs_with_sasl_mech "${mech}"
+done
